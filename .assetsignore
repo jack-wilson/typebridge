@@ -1,0 +1,13 @@
+.git
+.git/**
+.gitignore
+.claude
+.claude/**
+.wrangler
+.wrangler/**
+node_modules
+node_modules/**
+.env
+.env.*
+*.log
+.DS_Store
