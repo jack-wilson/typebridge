@@ -23,7 +23,7 @@ Live at [typebridge.app](https://typebridge.app) (once deployed).
 TypeBridge is plain HTML/CSS/JS with zero build step.
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/typebridge.git
+git clone https://github.com/jack-wilson/typebridge.git
 cd typebridge
 npx serve .
 ```
