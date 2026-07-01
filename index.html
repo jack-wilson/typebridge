@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Figma → Fluid Type Scale</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <svg class="logo-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <rect x="2" y="2" width="7" height="7" rx="1.5"/>
+            <rect x="11" y="2" width="7" height="7" rx="1.5"/>
+            <rect x="2" y="11" width="7" height="7" rx="1.5"/>
+            <rect x="11" y="11" width="7" height="7" rx="1.5"/>
+          </svg>
+          <span>TypeBridge</span>
+        </div>
+        <p class="header-tagline">Figma text styles → fluid responsive type scale</p>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- Connect Form -->
+      <section class="card connect-card" id="connect-section">
+        <h2 class="card-title">Connect to Figma</h2>
+        <form id="connect-form">
+          <div class="field-group">
+            <div class="field">
+              <label for="figma-url">Figma File URL</label>
+              <input
+                id="figma-url"
+                type="url"
+                placeholder="https://www.figma.com/design/abc123/My-Design-System"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <div class="field">
+              <label for="api-token">
+                Personal Access Token
+                <a href="https://help.figma.com/hc/en-us/articles/8085703771159" target="_blank" rel="noopener" class="help-link">How to get one ↗</a>
+              </label>
+              <input
+                id="api-token"
+                type="password"
+                placeholder="figd_••••••••••••••••••••"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <p class="field-hint">Stored in sessionStorage only — never sent anywhere except Figma's API.</p>
+            </div>
+          </div>
+          <div id="form-error" class="error-banner hidden"></div>
+          <button type="submit" class="btn-primary" id="connect-btn">
+            <span class="btn-label">Extract Text Styles</span>
+            <span class="btn-spinner hidden">
+              <svg class="spinner-icon" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" stroke-dasharray="31.4" stroke-dashoffset="10" stroke-linecap="round"/>
+              </svg>
+              Extracting…
+            </span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Results -->
+      <section id="results" class="hidden">
+        <!-- Source banner -->
+        <div id="source-banner" class="source-banner hidden"></div>
+
+        <div class="results-group">
+        <!-- Stats bar -->
+        <div class="stats-bar">
+          <div class="stat">
+            <span class="stat-value" id="stat-total">0</span>
+            <span class="stat-label">styles found</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="stat-paired">0</span>
+            <span class="stat-label">fluid pairs</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="stat-unpaired">0</span>
+            <span class="stat-label">fixed size</span>
+          </div>
+          <button class="btn-ghost" id="reset-btn">← New file</button>
+        </div>
+
+        <!-- Style pairs grid -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Detected Styles</h2>
+            <p class="card-subtitle" id="detected-subtitle">Click <strong>fixed</strong> styles to select them. Pair 2+ into a fluid <code>clamp()</code>. Mobile + desktop variants pair automatically.</p>
+          </div>
+          <div id="selection-bar" class="selection-bar hidden">
+            <span id="selection-count">0 styles selected</span>
+            <button class="btn-ghost btn-sm" id="clear-selection-btn">Clear</button>
+            <button class="btn-primary btn-sm" id="pair-selected-btn">Pair styles</button>
+          </div>
+          <div id="styles-grid" class="styles-grid"></div>
+        </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="card settings-card">
+          <h2 class="card-title">Output Settings</h2>
+          <div class="settings-row">
+            <div class="setting-group">
+              <label>Viewport range</label>
+              <div class="range-inputs">
+                <div class="range-field">
+                  <input type="number" id="min-vw" value="375" min="200" max="800" />
+                  <span class="range-unit">px min</span>
+                </div>
+                <span class="range-arrow">→</span>
+                <div class="range-field">
+                  <input type="number" id="max-vw" value="1440" min="800" max="3000" />
+                  <span class="range-unit">px max</span>
+                </div>
+                <button class="btn-ghost btn-sm" id="lock-reference-btn" title="Lock current sizes as the new reference" disabled aria-label="Lock as reference">🔒</button>
+              </div>
+            </div>
+            <div class="setting-group">
+              <label>Base font size</label>
+              <div class="range-field">
+                <input type="number" id="base-font" value="16" min="12" max="24" />
+                <span class="range-unit">px</span>
+              </div>
+            </div>
+            <div class="setting-group">
+              <label>Output format</label>
+              <div class="format-tabs">
+                <button class="format-tab active" data-format="css">CSS vars</button>
+                <button class="format-tab" data-format="tailwind">Tailwind</button>
+                <button class="format-tab" data-format="both">Both</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview panel -->
+        <div class="card preview-card" id="preview-section">
+          <div class="preview-card-header">
+            <div>
+              <h2 class="card-title">Type Preview</h2>
+              <p class="card-subtitle">Drag the slider to see sizes interpolate across viewports.</p>
+            </div>
+            <div class="viewport-readout">
+              <span class="device-icon" id="device-icon">📱</span>
+              <span class="viewport-px" id="viewport-label">375px</span>
+              <span class="device-name" id="device-name">Mobile</span>
+            </div>
+          </div>
+          <div class="slider-wrap">
+            <input type="range" id="viewport-slider" class="viewport-slider" min="375" max="1440" value="375" step="1" />
+            <div class="breakpoint-ticks" id="breakpoint-ticks"></div>
+          </div>
+          <div id="preview-specimens" class="preview-specimens"></div>
+        </div>
+
+        <!-- Layout Showcase -->
+        <div class="card layout-showcase-card">
+          <div class="layout-showcase-header">
+            <div>
+              <h2 class="card-title">Layout Showcase</h2>
+              <p class="card-subtitle">See how your scale composes in real layouts. Drag the viewport slider above to scrub.</p>
+            </div>
+            <span class="layout-viewport-badge"><span id="layout-vw">375</span>px</span>
+          </div>
+          <div class="layout-scrub-wrap">
+            <input type="range" id="layout-scrub-slider" class="viewport-slider" min="375" max="1440" value="375" step="1" aria-label="Layout viewport scrubber" />
+            <div class="layout-scrub-ticks" id="layout-scrub-ticks"></div>
+          </div>
+          <div class="layout-stage">
+            <div class="layout-canvas" id="layout-canvas">
+              <div class="layout-resize-handle" id="layout-resize-handle" title="Drag to scrub viewport width" aria-label="Resize layout viewport"></div>
+              <!-- Hero -->
+              <div class="layout-hero">
+                <div class="fluid-container layout-hero-inner">
+                  <span class="role-caption layout-hero-eyebrow">
+                    <span class="layout-hero-dot"></span>
+                    New in TypeBridge
+                  </span>
+                  <h1 class="role-display layout-hero-title">
+                    Type that scales <span class="layout-hero-accent">beautifully</span> across every screen.
+                  </h1>
+                  <p class="role-body layout-hero-subhead">
+                    Define your scale once. TypeBridge generates fluid clamps, pairs your weights, and ships production-ready CSS — no more redlining breakpoints.
+                  </p>
+                  <div class="layout-hero-actions">
+                    <button type="button" class="role-body layout-hero-cta">Start a new scale</button>
+                    <button type="button" class="role-body layout-hero-ghost">View documentation</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card Grid -->
+              <section class="layout-card-grid">
+                <div class="fluid-container">
+                  <div class="fluid-grid">
+                    <article class="layout-card-tile">
+                      <span class="role-caption tile-eyebrow">Engineering</span>
+                      <h3 class="role-h3 tile-title">Refactoring the type pipeline for sub-millisecond reflows</h3>
+                      <p class="role-body tile-body">How we rewrote the clamp generator to memoize per-pair output and cut render time on large specimen sets by 78%.</p>
+                      <span class="role-caption tile-meta">8 min read · Jun 24</span>
+                    </article>
+                    <article class="layout-card-tile">
+                      <span class="role-caption tile-eyebrow">Design</span>
+                      <h3 class="role-h3 tile-title">A grammar for fluid scales</h3>
+                      <p class="role-body tile-body">Pairing mobile and desktop sizes is only the start. Here's the vocabulary our team uses to talk about rhythm, ratio, and reference width.</p>
+                      <span class="role-caption tile-meta">12 min read · Jun 18</span>
+                    </article>
+                    <article class="layout-card-tile">
+                      <span class="role-caption tile-eyebrow">Product</span>
+                      <h3 class="role-h3 tile-title">What we learned shipping Layout Showcase</h3>
+                      <p class="role-body tile-body">Three weeks of dogfooding, one rewrite, and the single Figma comment that changed the whole roadmap.</p>
+                      <span class="role-caption tile-meta">6 min read · Jun 12</span>
+                    </article>
+                    <article class="layout-card-tile">
+                      <span class="role-caption tile-eyebrow">Research</span>
+                      <h3 class="role-h3 tile-title">When designers stop trusting type tokens</h3>
+                      <p class="role-body tile-body">A survey of 142 product teams found the breaking point sits between 8 and 12 named sizes.</p>
+                      <span class="role-caption tile-meta">15 min read · Jun 05</span>
+                    </article>
+                    <article class="layout-card-tile">
+                      <span class="role-caption tile-eyebrow">Strategy</span>
+                      <h3 class="role-h3 tile-title">Type systems as infrastructure</h3>
+                      <p class="role-body tile-body">Why we treat the scale like a build artifact and version it alongside the codebase, not the brand guidelines.</p>
+                      <span class="role-caption tile-meta">9 min read · May 28</span>
+                    </article>
+                    <article class="layout-card-tile">
+                      <span class="role-caption tile-eyebrow">Brand</span>
+                      <h3 class="role-h3 tile-title">Voice at every viewport</h3>
+                      <p class="role-body tile-body">Headlines bend, captions don't. A short field guide to keeping tone consistent while the metrics shift underneath.</p>
+                      <span class="role-caption tile-meta">4 min read · May 21</span>
+                    </article>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <!-- Code output -->
+        <div class="card output-card">
+          <div class="output-header">
+            <h2 class="card-title">Generated Code</h2>
+            <button class="btn-copy" id="copy-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              Copy
+            </button>
+          </div>
+          <pre id="code-output" class="code-block"><code id="code-content"></code></pre>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
