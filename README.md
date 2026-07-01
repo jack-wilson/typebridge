@@ -16,7 +16,7 @@ Paste a Figma file URL and a personal access token → TypeBridge extracts your 
 
 ## Try it live
 
-Live at [typebridge.app](https://typebridge.app) (once deployed).
+Live at [type-bridge.netlify.app](https://type-bridge.netlify.app).
 
 ## Local development
 
