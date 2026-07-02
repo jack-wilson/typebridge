@@ -30,7 +30,7 @@ async function fetchInlineStyles(fileKey, nodeId, token) {
   let rootNode;
 
   if (nodeId) {
-    const res = await fetch(`${FIGMA_API}/files/${fileKey}/nodes?ids=${nodeId}`, { headers });
+    const res = await fetch(`${FIGMA_API}/files/${fileKey}/nodes?ids=${encodeURIComponent(nodeId)}`, { headers });
     if (!res.ok) throw new Error(`Failed to fetch node (${res.status})`);
     const data = await res.json();
     rootNode = data.nodes[nodeId]?.document;
@@ -106,7 +106,7 @@ async function fetchTextStyles(fileKey, token) {
   const textStyles = (meta.styles || []).filter(s => s.style_type === 'TEXT');
   if (textStyles.length === 0) return [];
 
-  const ids = textStyles.map(s => s.node_id).join(',');
+  const ids = textStyles.map(s => encodeURIComponent(s.node_id)).join(',');
   const nodesRes = await fetch(`${FIGMA_API}/files/${fileKey}/nodes?ids=${ids}`, { headers });
   if (!nodesRes.ok) throw new Error(`Failed to fetch node details (${nodesRes.status})`);
   const { nodes } = await nodesRes.json();
@@ -821,6 +821,20 @@ function renderResults(pairs, { scroll = true } = {}) {
 
 const BREAKPOINTS = [375, 768, 1024, 1440];
 
+// Build the inner content for a breakpoint tick — uses textContent for the label so
+// the safety invariant is local (not dependent on the caller passing a Number).
+function buildTickInner(bp) {
+  const frag = document.createDocumentFragment();
+  const line = document.createElement('div');
+  line.className = 'bp-tick-line';
+  frag.appendChild(line);
+  const label = document.createElement('span');
+  label.className = 'bp-tick-label';
+  label.textContent = String(bp);
+  frag.appendChild(label);
+  return frag;
+}
+
 const DEVICE_CONFIG = [
   { maxVw: 767,  icon: '📱', name: 'Mobile' },
   { maxVw: 1023, icon: '💻', name: 'Tablet' },
@@ -881,7 +895,7 @@ function refreshLayoutShowcase() {
       if (i === 0) tick.classList.add('is-first');
       if (i === tickValues.length - 1) tick.classList.add('is-last');
       tick.style.left = `${pct}%`;
-      tick.innerHTML = `<div class="bp-tick-line"></div><span class="bp-tick-label">${bp}</span>`;
+      tick.appendChild(buildTickInner(bp));
       ticksEl.appendChild(tick);
     });
   }
@@ -976,7 +990,7 @@ function renderPreview(pairs) {
     if (i === 0) tick.classList.add('is-first');
     if (i === tickValues.length - 1) tick.classList.add('is-last');
     tick.style.left = `${pct}%`;
-    tick.innerHTML = `<div class="bp-tick-line"></div><span class="bp-tick-label">${bp}</span>`;
+    tick.appendChild(buildTickInner(bp));
     ticksEl.appendChild(tick);
   });
 
