@@ -814,6 +814,7 @@ function renderResults(pairs, { scroll = true } = {}) {
   updateLayoutCanvas(state.minVw);
   updateLockButton();
   $('results').classList.remove('hidden');
+  document.body.classList.remove('is-landing');
   if (scroll) $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -1137,6 +1138,7 @@ $('connect-form').addEventListener('submit', async e => {
 
 $('reset-btn').addEventListener('click', () => {
   $('results').classList.add('hidden');
+  document.body.classList.add('is-landing');
   $('connect-section').scrollIntoView({ behavior: 'smooth' });
 });
 

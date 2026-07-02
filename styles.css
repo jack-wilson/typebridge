@@ -95,6 +95,13 @@ h1, h2, h3, .card-title { letter-spacing: -0.015em; }
   display: flex;
   flex-direction: column;
   gap: 24px;
+  flex: 1;
+}
+
+/* Landing state — center the connect form vertically before results render */
+body.is-landing .main {
+  justify-content: center;
+  padding-block: 24px;
 }
 
 #results {
